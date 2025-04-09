@@ -27,8 +27,19 @@ const loginSchema = Joi.object({
 const addWalletSchema = Joi.object({
   user_id: Joi.number().integer().required(),
   name: Joi.string().min(3).max(50).required(),
-  type: Joi.string().valid("pokok", "goal").required(),
+  type: Joi.string().valid("cash", "bank", "ewallet").required(),
   balance: Joi.number().min(0).required(),
 });
 
-module.exports = { registerSchema, loginSchema, addWalletSchema };
+const updateWalletSchema = Joi.object({
+  name: Joi.string().min(3).max(50).optional(),
+  type: Joi.string().valid("cash", "bank", "ewallet").optional(),
+  balance: Joi.number().min(0).optional(),
+});
+
+module.exports = {
+  registerSchema,
+  loginSchema,
+  addWalletSchema,
+  updateWalletSchema,
+};
