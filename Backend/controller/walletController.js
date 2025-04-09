@@ -1,19 +1,27 @@
 const { response } = require("../utils/response");
 const { Wallet, User, Transaction } = require("../models/relations");
 const { addWalletSchema } = require("../config/validationInput");
-const { where } = require("sequelize");
+const paginate = require("../utils/paginate");
 
 const getAllWallet = async (req, res) => {
   try {
-    const getDatas = await Wallet.findAll();
-    if (!getDatas) return response(res, 400, false, "Data masih kosong", []);
-    return response(
-      res,
-      200,
-      true,
-      "Berhasil mengambil semua wallet",
-      getDatas
-    );
+    const { page, limit, offset, all = true } = paginate(req.body);
+
+    let getDatas;
+    if (all == "true") {
+      getDatas = await Wallet.findAll();
+    } else {
+      getDatas = await Wallet.findAll({
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      });
+    }
+
+    if (!getDatas || getDatas.length === 0) {
+      return response(res, 404, false, "Wallet masih kosong");
+    }
+
+    return response(res, 200, true, "Mengambil semua data wallet", getDatas);
   } catch (error) {
     console.log(error);
     response(res, 500, false, error.message);
@@ -152,7 +160,8 @@ const getBalanceById = async (req, res) => {
 const getTransactionByWalletId = async (req, res) => {
   try {
     const { id } = req.params;
-    const { page = 1, limit = 10, all = false } = req.query;
+    // const { page = 1, limit = 10, all = false } = req.query;
+    const { page, limit, offset, all = true } = paginate(req.query);
 
     // Cek wallet apakah ada
     const wallet = await Wallet.findByPk(id);
@@ -168,7 +177,6 @@ const getTransactionByWalletId = async (req, res) => {
       });
     } else {
       // Pakai pagination
-      const offset = (page - 1) * limit;
       transactions = await Transaction.findAll({
         where: { wallet_id: id },
         limit: parseInt(limit),
