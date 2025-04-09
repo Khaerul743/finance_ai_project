@@ -1,5 +1,5 @@
 const { response } = require("../utils/response");
-const { Wallet, User } = require("../models/relations");
+const { Wallet, User, Transaction } = require("../models/relations");
 const { addWalletSchema } = require("../config/validationInput");
 const { where } = require("sequelize");
 
@@ -113,6 +113,86 @@ const getBalanceById = async (req, res) => {
   }
 };
 
+// const getTransactionByWalletId = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     //Cek wallet apakah ada
+//     const wallet = await Wallet.findByPk(id);
+//     if (!wallet) return response(res, 404, false, "Wallet tidak ditemukan");
+
+//     //Ambil transaksi berdasarkan wallet id
+//     const getTransactions = await Transaction.findAll({
+//       where: { wallet_id: id },
+//       order: [["createdAt", "DESC"]],
+//     });
+
+//     if (!getTransactions || getTransactions.length === 0) {
+//       return response(
+//         res,
+//         200,
+//         true,
+//         "Belum ada transaksi untuk wallet ini",
+//         []
+//       );
+//     }
+
+//     return response(
+//       res,
+//       200,
+//       true,
+//       "Mengambil semua transaksi berdasarkan id wallet",
+//       getTransactions
+//     );
+//   } catch (error) {
+//     console.log("Gagal mengambil transaksi: ", error);
+//     return response(res, 500, false, error.message);
+//   }
+// };
+
+const getTransactionByWalletId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { page = 1, limit = 10, all = false } = req.query;
+
+    // Cek wallet apakah ada
+    const wallet = await Wallet.findByPk(id);
+    if (!wallet) return response(res, 404, false, "Wallet tidak ditemukan");
+
+    // Ambil transaksi berdasarkan wallet_id
+    let transactions;
+
+    if (all === "true") {
+      // Ambil semua transaksi
+      transactions = await Transaction.findAll({
+        where: { wallet_id: id },
+      });
+    } else {
+      // Pakai pagination
+      const offset = (page - 1) * limit;
+      transactions = await Transaction.findAll({
+        where: { wallet_id: id },
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      });
+    }
+
+    if (!transactions || transactions.length === 0) {
+      return response(res, 404, false, "Belum melakukan transaksi");
+    }
+
+    return response(
+      res,
+      200,
+      true,
+      "Mengambil semua transaksi berdasarkan id wallet",
+      transactions
+    );
+  } catch (error) {
+    console.log("Gagal mengambil transaksi: ", error);
+    return response(res, 500, false, error.message);
+  }
+};
+
 module.exports = {
   getAllWallet,
   getAllWalletById,
@@ -120,4 +200,5 @@ module.exports = {
   updateWallet,
   deleteWallet,
   getBalanceById,
+  getTransactionByWalletId,
 };
