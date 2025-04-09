@@ -37,9 +37,52 @@ const updateWalletSchema = Joi.object({
   balance: Joi.number().min(0).optional(),
 });
 
+const addTransactionSchema = Joi.object({
+  wallet_id: Joi.number().integer().required(),
+  type: Joi.string().valid("pengeluaran", "pemasukan").required(),
+  amount: Joi.number().min(0).required(),
+  category: Joi.string().valid(
+    "belanja",
+    "keperluan pribadi",
+    "hiburan",
+    "donasi",
+    "investasi",
+    "makanan dan minuman",
+    "kesehatan",
+    "pendidikan",
+    "tagihan",
+    "transportasi",
+    "transfer",
+    "lainnya"
+  ),
+  description: Joi.string(),
+});
+
+const updateTransactionSchema = Joi.object({
+  type: Joi.string().valid("pengeluaran", "pemasukan").required(),
+  amount: Joi.number().min(0).required(),
+  category: Joi.string().valid(
+    "belanja",
+    "keperluan pribadi",
+    "hiburan",
+    "donasi",
+    "investasi",
+    "makanan dan minuman",
+    "kesehatan",
+    "pendidikan",
+    "tagihan",
+    "transportasi",
+    "transfer",
+    "lainnya"
+  ),
+  description: Joi.string(),
+});
+
 module.exports = {
   registerSchema,
   loginSchema,
   addWalletSchema,
   updateWalletSchema,
+  addTransactionSchema,
+  updateTransactionSchema,
 };
