@@ -25,7 +25,6 @@ const loginSchema = Joi.object({
 });
 
 const addWalletSchema = Joi.object({
-  user_id: Joi.number().integer().required(),
   name: Joi.string().min(3).max(50).required(),
   type: Joi.string().valid("cash", "bank", "ewallet").required(),
   balance: Joi.number().min(0).required(),
@@ -38,7 +37,6 @@ const updateWalletSchema = Joi.object({
 });
 
 const addTransactionSchema = Joi.object({
-  wallet_id: Joi.number().integer().required(),
   type: Joi.string().valid("pengeluaran", "pemasukan").required(),
   amount: Joi.number().min(0).required(),
   category: Joi.string().valid(

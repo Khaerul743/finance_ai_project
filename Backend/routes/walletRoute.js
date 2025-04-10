@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+
+const { verifyToken } = require("../middlewares/authentication");
 const {
   getAllWallet,
   getAllWalletById,
@@ -18,7 +20,7 @@ const {
 
 router.get("/wallet", getAllWallet);
 router.get("/wallet/:id", getAllWalletById);
-router.post("/wallet", validate(addWalletSchema), addWallet);
+router.post("/wallet", verifyToken, validate(addWalletSchema), addWallet);
 router.put("/wallet/:id", validate(updateWalletSchema), updateWallet);
 router.delete("/wallet/:id", deleteWallet);
 router.get("/wallet/:id/balance", getBalanceById);

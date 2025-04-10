@@ -2,6 +2,7 @@ const { User } = require("../models/relations");
 const { response } = require("../utils/response");
 const { registerSchema, loginSchema } = require("../config/validationInput");
 const { hashPass, comparePass } = require("../utils/bcrypt");
+const { generateToken } = require("../utils/generateToken");
 
 const registerHandler = async (req, res) => {
   let { name, email, password } = req.body;
@@ -36,6 +37,10 @@ const loginHandler = async (req, res) => {
     //validasi password
     const validationPass = await comparePass(user.password, password);
     if (!validationPass) return response(res, 400, false, "Password salah");
+
+    console.log(user);
+
+    return generateToken(res, user);
   } catch (error) {
     console.log(error);
     return response(res, 500, false, error.message);

@@ -42,14 +42,20 @@ const getAllWalletById = async (req, res) => {
 
 const addWallet = async (req, res) => {
   try {
-    const { user_id, name, type, balance } = req.body;
+    const { name, type, balance } = req.body;
+    const { id } = req.user;
 
     //Cek apakah user ada
-    const isUserExist = await User.findByPk(user_id);
+    const isUserExist = await User.findByPk(id);
     if (!isUserExist) return response(res, 404, false, "User tidak ditemukan");
 
     //Masukan ke db
-    const createData = await Wallet.create({ user_id, name, type, balance });
+    const createData = await Wallet.create({
+      user_id: id,
+      name,
+      type,
+      balance,
+    });
 
     return response(
       res,

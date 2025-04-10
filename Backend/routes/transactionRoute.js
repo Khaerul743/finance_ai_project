@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { transaction } = require("../middlewares/transaction");
 
 const {
   getAllTransactions,
@@ -9,7 +10,7 @@ const {
   updateTransaction,
   deleteTransaction,
 } = require("../controller/transactionController");
-const validate = require("../middlewares/validation");
+const { validate } = require("../middlewares/validation");
 const {
   addTransactionSchema,
   updateTransactionSchema,
@@ -29,7 +30,12 @@ router.get("/transaction/:wallet_id", getAllTransactionsByDate);
 // Transaksi sebelum Februari:
 // /transactions?end=2024-02-01
 
-router.post("/transaction", validate(addTransactionSchema), addTransaction);
+router.post(
+  "/transaction/:wallet_id",
+  transaction,
+  validate(addTransactionSchema),
+  addTransaction
+);
 router.put(
   "/transaction/:id",
   validate(updateTransactionSchema),

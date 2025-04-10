@@ -1,12 +1,17 @@
 const express = require("express");
 const app = express();
+const cookieParser = require("cookie-parser");
 
 const authRoute = require("./routes/authRoute");
 const userRoute = require("./routes/userRoute");
 const walletRoute = require("./routes/walletRoute");
 const transactionRoute = require("./routes/transactionRoute");
 
+//middleware
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
 app.use("/api/auth", authRoute);
 app.use("/api", userRoute);
 app.use("/api", walletRoute);

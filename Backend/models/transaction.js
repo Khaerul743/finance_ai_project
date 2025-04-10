@@ -51,7 +51,8 @@ const Transaction = sequelize.define(
     },
     description: {
       type: DataTypes.TEXT,
-      defaultValue: true,
+      allowNull: true,
+      defaultValue: "tidak ada",
     },
     date: {
       type: DataTypes.DATE,

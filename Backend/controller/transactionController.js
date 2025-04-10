@@ -1,3 +1,4 @@
+const { transaction } = require("../middlewares/transaction");
 const { Transaction, Wallet } = require("../models/relations");
 const paginate = require("../utils/paginate");
 const { response } = require("../utils/response");
@@ -105,30 +106,56 @@ const getAllTransactionsByDate = async (req, res) => {
 };
 
 const addTransaction = async (req, res) => {
+  const t = req.transaction;
   try {
-    const { wallet_id, type, amount, category, description, date } = req.body;
+    const { type, amount, category, description, date } = req.body;
+    const { wallet_id } = req.params;
 
-    //Cek apakah wallet ada
-    const wallet = await Wallet.findByPk(wallet_id);
-    if (!wallet) return response(res, 404, false, "Wallet tidak ditemukan");
+    // Cek wallet
+    const wallet = await Wallet.findByPk(wallet_id, { transaction: t });
+    if (!wallet) {
+      await t.rollback();
+      return response(res, 404, false, "Wallet tidak ditemukan");
+    }
 
-    //Tambahkan transaksi baru
-    const addTransaction = await wallet.create({
-      type,
-      amount,
-      category,
-      description,
-      date,
-    });
+    // Cek saldo jika transaksi pengeluaran
+    if (type === "pengeluaran" && wallet.balance < amount) {
+      await t.rollback();
+      return response(res, 400, false, "Saldo tidak cukup");
+    }
 
+    // Hitung saldo baru
+    const newBalance =
+      type === "pengeluaran"
+        ? wallet.balance - amount
+        : wallet.balance + amount;
+
+    // Update saldo wallet
+    await wallet.update({ balance: newBalance }, { transaction: t });
+
+    // Buat transaksi baru
+    const newTransaction = await Transaction.create(
+      {
+        wallet_id,
+        type,
+        amount,
+        category,
+        description,
+        date,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
     return response(
       res,
       201,
       true,
       "Berhasil menambahkan transaksi baru",
-      addTransaction
+      newTransaction
     );
   } catch (error) {
+    await t.rollback();
     console.log("Gagal menambahkan transaksi: ", error);
     return response(res, 500, false, error.message);
   }
