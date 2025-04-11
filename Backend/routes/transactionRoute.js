@@ -38,6 +38,7 @@ router.post(
 );
 router.put(
   "/transaction/:id",
+  transaction,
   validate(updateTransactionSchema),
   updateTransaction
 );

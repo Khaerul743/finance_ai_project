@@ -1,8 +1,7 @@
-const { transaction } = require("../middlewares/transaction");
-const { Transaction, Wallet } = require("../models/relations");
+const { Transaction, Wallet, DailySummary } = require("../models/relations");
 const paginate = require("../utils/paginate");
 const { response } = require("../utils/response");
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 
 const getAllTransactions = async (req, res) => {
   try {
@@ -145,6 +144,32 @@ const addTransaction = async (req, res) => {
       },
       { transaction: t }
     );
+    const summary = await DailySummary.findOne({ where: { wallet_id, date } });
+
+    if (!summary) {
+      const total_expense = type === "pengeluaran" ? amount : 0;
+      const total_income = type === "pemasukan" ? amount : 0;
+      await DailySummary.create(
+        {
+          wallet_id,
+          date,
+          total_expense,
+          total_income,
+        },
+        {
+          transaction: t,
+        }
+      );
+    }
+
+    if (summary) {
+      if (type === "pengeluaran") {
+        summary.total_expense += amount;
+      } else if (type === "pemasukan") {
+        summary.total_income += amount;
+      }
+      await summary.save();
+    }
 
     await t.commit();
     return response(
@@ -162,18 +187,136 @@ const addTransaction = async (req, res) => {
 };
 
 const updateTransaction = async (req, res) => {
+  const t = req.transaction;
   try {
     const { id } = req.params;
     const { type, amount, category, description, date } = req.body;
 
-    //Cek apakah transaksi ada
     const transaction = await Transaction.findByPk(id);
-    if (!transaction)
+    if (!transaction) {
+      await t.rollback();
       return response(res, 404, false, "Transaksi tidak ditemukan");
+    }
 
-    //Update transaksi
-    await transaction.update({ type, amount, category, description, date });
-    return response(res, 200, true, {
+    const wallet = await Wallet.findByPk(transaction.wallet_id);
+    if (!wallet) {
+      await t.rollback();
+      return response(res, 404, false, "Wallet tidak ditemukan");
+    }
+
+    const oldTransaction = { ...transaction.get() };
+    const walletId = wallet.id;
+
+    let balance = wallet.balance;
+
+    // 1. Kembalikan efek transaksi lama
+    if (transaction.type === "pengeluaran") {
+      balance += transaction.amount;
+    } else {
+      balance -= transaction.amount;
+    }
+
+    // 2. Terapkan efek transaksi baru
+    if (type === "pengeluaran") {
+      if (balance < amount) {
+        await t.rollback();
+        return response(res, 400, false, "Saldo tidak cukup untuk update");
+      }
+      balance -= amount;
+    } else {
+      balance += amount;
+    }
+
+    // 3. Simpan perubahan transaksi & wallet
+    await wallet.update({ balance }, { transaction: t });
+    await transaction.update(
+      { type, amount, category, description, date },
+      { transaction: t }
+    );
+
+    // 4. Update DailySummary
+    const oldDate = oldTransaction.date.toISOString().split("T")[0];
+    const newDate = new Date(date).toISOString().split("T")[0];
+
+    if (oldDate === newDate) {
+      const summary = await DailySummary.findOne({
+        where: { wallet_id: walletId, date: oldDate },
+        transaction: t,
+      });
+
+      if (summary) {
+        // Rollback data lama
+        if (oldTransaction.type === "pengeluaran") {
+          summary.total_expense -= oldTransaction.amount;
+        } else {
+          summary.total_income -= oldTransaction.amount;
+        }
+
+        // Tambahkan data baru
+        if (type === "pengeluaran") {
+          summary.total_expense += amount;
+        } else {
+          summary.total_income += amount;
+        }
+
+        // Hindari nilai negatif
+        summary.total_expense = Math.max(summary.total_expense, 0);
+        summary.total_income = Math.max(summary.total_income, 0);
+
+        await summary.save({ transaction: t });
+      }
+    } else {
+      // Update tanggal lama
+      const oldSummary = await DailySummary.findOne({
+        where: { wallet_id: walletId, date: oldDate },
+        transaction: t,
+      });
+
+      if (oldSummary) {
+        if (oldTransaction.type === "pengeluaran") {
+          oldSummary.total_expense -= oldTransaction.amount;
+        } else {
+          oldSummary.total_income -= oldTransaction.amount;
+        }
+
+        oldSummary.total_expense = Math.max(oldSummary.total_expense, 0);
+        oldSummary.total_income = Math.max(oldSummary.total_income, 0);
+
+        await oldSummary.save({ transaction: t });
+      }
+
+      // Update/tambah tanggal baru
+      let newSummary = await DailySummary.findOne({
+        where: { wallet_id: walletId, date: newDate },
+        transaction: t,
+      });
+
+      if (!newSummary) {
+        newSummary = await DailySummary.create(
+          {
+            wallet_id: walletId,
+            date: newDate,
+            total_expense: 0,
+            total_income: 0,
+          },
+          { transaction: t }
+        );
+      }
+
+      if (type === "pengeluaran") {
+        newSummary.total_expense += amount;
+      } else {
+        newSummary.total_income += amount;
+      }
+
+      newSummary.total_expense = Math.max(newSummary.total_expense, 0);
+      newSummary.total_income = Math.max(newSummary.total_income, 0);
+
+      await newSummary.save({ transaction: t });
+    }
+
+    await t.commit();
+    return response(res, 200, true, "Transaksi berhasil diupdate", {
       type,
       amount,
       category,
@@ -181,12 +324,14 @@ const updateTransaction = async (req, res) => {
       date,
     });
   } catch (error) {
+    await t.rollback();
     console.log("Gagal update transaksi: ", error);
     return response(res, 500, false, error.message);
   }
 };
 
 const deleteTransaction = async (req, res) => {
+  const t = req.transaction;
   try {
     const { id } = req.params;
 
@@ -194,6 +339,13 @@ const deleteTransaction = async (req, res) => {
     const transaction = await Transaction.findByPk(id);
     if (!transaction)
       return response(res, 404, false, "Transaksi tidak ditemukan");
+
+    const { wallet_id, amount, type } = transaction;
+    const wallet = await Wallet.findByPk(wallet_id);
+
+    type == "pengeluaran"
+      ? await wallet.update({ balance: wallet.balance + amount })
+      : await wallet.update({ balance: wallet.balance - amount });
 
     //delete transaksi
     await transaction.destroy();

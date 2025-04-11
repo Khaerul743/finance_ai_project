@@ -54,6 +54,7 @@ const addTransactionSchema = Joi.object({
     "lainnya"
   ),
   description: Joi.string(),
+  date: Joi.string(),
 });
 
 const updateTransactionSchema = Joi.object({
@@ -74,6 +75,7 @@ const updateTransactionSchema = Joi.object({
     "lainnya"
   ),
   description: Joi.string(),
+  date: Joi.string(),
 });
 
 module.exports = {
