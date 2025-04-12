@@ -3,6 +3,7 @@ const { response } = require("../utils/response");
 const { registerSchema, loginSchema } = require("../config/validationInput");
 const { hashPass, comparePass } = require("../utils/bcrypt");
 const { generateToken } = require("../utils/generateToken");
+const passport = require("passport");
 
 const registerHandler = async (req, res) => {
   let { name, email, password } = req.body;
@@ -47,4 +48,29 @@ const loginHandler = async (req, res) => {
   }
 };
 
-module.exports = { registerHandler, loginHandler };
+const loginGoogle = passport.authenticate("google", {
+  scope: ["profile", "email", "https://www.googleapis.com/auth/gmail.readonly"],
+  accessType: "offline",
+});
+
+const googleCallback = passport.authenticate("google", {
+  failureRedirect: "/",
+});
+
+const googleRedirect = (req, res) => {
+  res.redirect("/api/auth/google/profile");
+};
+
+const emailProfile = (req, res) => {
+  if (!req.isAuthenticated()) return res.redirect("/");
+  res.send("<h1>Tengkyu Feb</h1>");
+  console.log(req.user.accessToken);
+};
+module.exports = {
+  registerHandler,
+  loginHandler,
+  loginGoogle,
+  googleCallback,
+  googleRedirect,
+  emailProfile,
+};

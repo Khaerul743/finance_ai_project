@@ -340,15 +340,26 @@ const deleteTransaction = async (req, res) => {
     if (!transaction)
       return response(res, 404, false, "Transaksi tidak ditemukan");
 
-    const { wallet_id, amount, type } = transaction;
+    const { wallet_id, amount, type, date } = transaction;
     const wallet = await Wallet.findByPk(wallet_id);
 
     type == "pengeluaran"
       ? await wallet.update({ balance: wallet.balance + amount })
       : await wallet.update({ balance: wallet.balance - amount });
 
+    //Delete dairy summary
+    const summary = await DailySummary.findOne({ where: { wallet_id, date } });
+    if (summary) {
+      if (type === "pengeluaran") {
+        summary.total_expense -= amount;
+      } else {
+        summary.total_income -= amount;
+      }
+      await summary.save({ transaction: t });
+    }
     //delete transaksi
-    await transaction.destroy();
+    await transaction.destroy({ transaction: t });
+    await t.commit();
     return response(res, 200, true, "Berhasil menghapus transaksi", { id });
   } catch (error) {
     console.log("Gagal menghapus transaksi: ", error);

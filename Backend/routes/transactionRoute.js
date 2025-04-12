@@ -42,6 +42,6 @@ router.put(
   validate(updateTransactionSchema),
   updateTransaction
 );
-router.delete("/transaction/:id", deleteTransaction);
+router.delete("/transaction/:id", transaction, deleteTransaction);
 
 module.exports = router;
