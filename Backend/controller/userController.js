@@ -40,7 +40,7 @@ const getUserById = async (req, res) => {
     });
   } catch (error) {
     console.log("Gagal mengambil data user: ", error);
-    return response(res, 500, true, error.message);
+    return response(res, 500, false, error.message);
   }
 };
 

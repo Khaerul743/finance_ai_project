@@ -1,7 +1,8 @@
 const { google } = require("googleapis");
 const cheerio = require("cheerio");
+const { HistoryEmail } = require("../models/relations");
 
-async function getEmails(accessToken) {
+async function getEmails(accessToken, user_id) {
   const auth = new google.auth.OAuth2();
   auth.setCredentials({ access_token: accessToken });
 
@@ -10,7 +11,7 @@ async function getEmails(accessToken) {
   try {
     const res = await gmail.users.messages.list({
       userId: "me",
-      maxResults: 1, // Ambil 5 email terbaru
+      maxResults: 10, // Ambil 5 email terbaru
     });
 
     if (!res.data.messages) {
@@ -26,6 +27,66 @@ async function getEmails(accessToken) {
       });
       emails.push(email.data);
     }
+
+    const parsedEmails = emails.map((email) => {
+      const headers = email.payload.headers;
+
+      const getHeader = (name) =>
+        headers.find((h) => h.name.toLowerCase() === name.toLowerCase())
+          ?.value || "";
+
+      const subject = getHeader("Subject");
+      const from = getHeader("From");
+      const to = getHeader("To");
+      const date = getHeader("Date");
+
+      let body = "";
+      if (email.payload.parts) {
+        const part = email.payload.parts.find(
+          (p) => p.mimeType === "text/plain"
+        );
+        const data = part?.body?.data;
+        if (data)
+          body = cleanEmailBody(
+            extrak(Buffer.from(data, "base64").toString("utf-8"))
+          );
+      } else if (email.payload.body?.data) {
+        body = cleanEmailBody(
+          extrak(
+            Buffer.from(email.payload.body.data, "base64").toString("utf-8")
+          )
+        );
+      }
+
+      return {
+        id: email.id,
+        subject,
+        from,
+        to,
+        date,
+        body,
+      };
+    });
+
+    parsedEmails;
+
+    parsedEmails.forEach(async (email) => {
+      const isExistHistory = await HistoryEmail.findOne({
+        where: { email_id: email.id },
+      });
+      if (!isExistHistory) {
+        await HistoryEmail.create({
+          user_id,
+          email_id: email.id,
+          subject: email.subject,
+          body: email.body,
+          from_address: email.from,
+          to_address: email.to,
+          date_received: email.date,
+        });
+      }
+    });
+
     const newEmails = emails
       .map(
         (email) => email.payload.body.data || email.payload.parts[0].body.data

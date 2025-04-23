@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const cors = require("cors")
 require("dotenv").config();
 
 const authRoute = require("./routes/authRoute");
@@ -11,8 +12,16 @@ const userRoute = require("./routes/userRoute");
 const walletRoute = require("./routes/walletRoute");
 const transactionRoute = require("./routes/transactionRoute");
 const emailRoute = require("./routes/emailRoutes");
+const aiRoute = require("./routes/AIRoutes")
 
 //middleware
+
+app.use(
+  cors({
+    origin: "http://localhost:5500",
+    credentials: true,
+  })
+);
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -25,6 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(express.static("public"));
 
 // Konfigurasi Google OAuth
 passport.use(
@@ -32,7 +42,8 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:3000/api/auth/google/callback",
+      callbackURL:
+        "http://localhost:3000/api/auth/google/callback",
     },
     (accessToken, refreshToken, profile, done) => {
       return done(null, { profile, accessToken });
@@ -53,6 +64,7 @@ app.use("/api", userRoute);
 app.use("/api", walletRoute);
 app.use("/api", transactionRoute);
 app.use("/api", emailRoute);
+app.use("/api/AI", aiRoute)
 
 app.get("/", (req, res) => {
   res.send("Hello World");

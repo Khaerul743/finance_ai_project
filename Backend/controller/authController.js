@@ -63,7 +63,7 @@ const googleRedirect = (req, res) => {
 
 const emailProfile = (req, res) => {
   if (!req.isAuthenticated()) return res.redirect("/");
-  res.send("<h1>Tengkyu Feb</h1>");
+  res.send("<h1>KOntol</h1>");
   console.log(req.user.accessToken);
 };
 module.exports = {

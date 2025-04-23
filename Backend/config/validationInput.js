@@ -37,6 +37,7 @@ const updateWalletSchema = Joi.object({
 });
 
 const addTransactionSchema = Joi.object({
+  wallet_id:Joi.number().required(),
   type: Joi.string().valid("pengeluaran", "pemasukan").required(),
   amount: Joi.number().min(0).required(),
   category: Joi.string().valid(
@@ -55,6 +56,7 @@ const addTransactionSchema = Joi.object({
   ),
   description: Joi.string(),
   date: Joi.string(),
+  intent:Joi.string(),
 });
 
 const updateTransactionSchema = Joi.object({

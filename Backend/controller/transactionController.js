@@ -1,6 +1,7 @@
 const { Transaction, Wallet, DailySummary } = require("../models/relations");
 const paginate = require("../utils/paginate");
 const { response } = require("../utils/response");
+const moment = require("moment");
 const { Op, where } = require("sequelize");
 
 const getAllTransactions = async (req, res) => {
@@ -107,9 +108,7 @@ const getAllTransactionsByDate = async (req, res) => {
 const addTransaction = async (req, res) => {
   const t = req.transaction;
   try {
-    const { type, amount, category, description, date } = req.body;
-    const { wallet_id } = req.params;
-
+    const { wallet_id,type, amount, category, description,date = moment().startOf("day").toDate() } = req.body;
     // Cek wallet
     const wallet = await Wallet.findByPk(wallet_id, { transaction: t });
     if (!wallet) {
@@ -140,7 +139,7 @@ const addTransaction = async (req, res) => {
         amount,
         category,
         description,
-        date,
+        date
       },
       { transaction: t }
     );

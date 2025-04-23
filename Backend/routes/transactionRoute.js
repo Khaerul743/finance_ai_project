@@ -31,7 +31,7 @@ router.get("/transaction/:wallet_id", getAllTransactionsByDate);
 // /transactions?end=2024-02-01
 
 router.post(
-  "/transaction/:wallet_id",
+  "/transaction",
   transaction,
   validate(addTransactionSchema),
   addTransaction
