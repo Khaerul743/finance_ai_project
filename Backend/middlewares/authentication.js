@@ -15,4 +15,13 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-module.exports = { verifyToken };
+function agentAuthMiddleware(req, res, next) {
+  const token = req.headers['key'];
+  if (token !== process.env.AGENT_SECRET) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+  next();
+}
+
+
+module.exports = { verifyToken,agentAuthMiddleware};

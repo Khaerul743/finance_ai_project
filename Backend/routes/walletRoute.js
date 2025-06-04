@@ -2,10 +2,12 @@ const express = require("express");
 const router = express.Router();
 
 const { verifyToken } = require("../middlewares/authentication");
+const { authorizationRoles } = require("../middlewares/authRole")
 const {
   getAllWallet,
-  getAllWalletById,
+  getWalletById,
   addWallet,
+  getMyWallet,
   updateWallet,
   deleteWallet,
   getBalanceById,
@@ -17,13 +19,15 @@ const {
   addWalletSchema,
   updateWalletSchema,
 } = require("../config/validationInput");
+const {redisCache} = require("../middlewares/redisCache")
 
-router.get("/wallet", getAllWallet);
-router.get("/wallet/:id", getAllWalletById);
-router.post("/wallet", verifyToken, validate(addWalletSchema), addWallet);
-router.put("/wallet/:id", validate(updateWalletSchema), updateWallet);
-router.delete("/wallet/:id", deleteWallet);
-router.get("/wallet/:id/balance", getBalanceById);
-router.get("/wallet/:id/transactions", getTransactionByWalletId);
+router.get("/wallet",verifyToken,authorizationRoles("admin"), getAllWallet);
+router.get("/wallet/my_wallet",verifyToken,authorizationRoles("admin","user"), getMyWallet);
+router.get("/wallet/:id",verifyToken,authorizationRoles("admin","user"), getWalletById);
+router.post("/wallet", verifyToken,authorizationRoles("admin","user"), validate(addWalletSchema), addWallet);
+router.put("/wallet/:id",verifyToken, validate(updateWalletSchema),authorizationRoles("admin","user"), updateWallet);
+router.delete("/wallet/:id",verifyToken,authorizationRoles("admin","user"), deleteWallet);
+router.get("/wallet/:id/balance",verifyToken,authorizationRoles("admin","user"), getBalanceById);
+router.get("/wallet/:id/transactions",verifyToken,authorizationRoles("admin","user"),redisCache, getTransactionByWalletId);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const { Transaction, Wallet, DailySummary } = require("../models/relations");
+const router = require("../routes/userRoute");
 const paginate = require("../utils/paginate");
 const { response } = require("../utils/response");
 const moment = require("moment");
@@ -105,7 +106,22 @@ const getAllTransactionsByDate = async (req, res) => {
   }
 };
 
+const getSummary = async (req,res) => {
+  try {
+    const {wallet_id} = req.params
+    if(!wallet_id) return response(res,400,false,"Wallet id is required")
+    
+    const getDataSum = await DailySummary.findAll({where:{wallet_id}})
+
+    return response(res,200,true,"Berhasil mengambil data summary",getDataSum)
+  } catch (error) {
+    console.error("Gagal mengambil data transaksi:", error);
+    return response(res, 500, false, error.message);
+  }
+}
+
 const addTransaction = async (req, res) => {
+  console.log(req.body)
   const t = req.transaction;
   try {
     const { wallet_id,type, amount, category, description,date = moment().startOf("day").toDate() } = req.body;
@@ -369,6 +385,7 @@ module.exports = {
   getAllTransactions,
   getTransactionById,
   getAllTransactionsByDate,
+  getSummary,
   addTransaction,
   updateTransaction,
   deleteTransaction,

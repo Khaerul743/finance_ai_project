@@ -2,13 +2,13 @@ const jwt = require("jsonwebtoken");
 const { response } = require("./response");
 require("dotenv").config();
 
-const generateToken = (res, user) => {
+const generateToken = (res, user,provider=undefined) => {
   const payload = { id: user.id, role: user.role };
   const options = {
     expiresIn: "24h",
   };
-
   jwt.sign(payload, process.env.SECRET_KEY, options, (err, token) => {
+
     if (err) {
       return response(res, 400, false, "Gagal generate token");
     }
@@ -17,13 +17,14 @@ const generateToken = (res, user) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: false, // aktifkan hanya jika pakai HTTPS
-      sameSite: "none", // agar bisa cross-origin (misal frontend beda domain)
+      sameSite: "Lax", // agar bisa cross-origin (misal frontend beda domain)
     });
-
-    // Kirim response
-    response(res, 200, true, "Login berhasil", {
+    const url = process.env.FE_URL
+    //Kirim response
+    if(provider == "google") return res.redirect(`${url}/dashboard`)
+      
+    return response(res, 200, true, "Login berhasil", {
       email: user.email,
-      token,
     });
   });
 };

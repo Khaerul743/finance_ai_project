@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const { transaction } = require("../middlewares/transaction");
-
 const {
   getAllTransactions,
   getTransactionById,
   getAllTransactionsByDate,
+  getSummary,
   addTransaction,
   updateTransaction,
   deleteTransaction,
@@ -16,9 +16,13 @@ const {
   updateTransactionSchema,
 } = require("../config/validationInput");
 
-router.get("/transaction", getAllTransactions);
-router.get("/transaction/:id", getTransactionById);
-router.get("/transaction/:wallet_id", getAllTransactionsByDate);
+const {verifyToken} = require("../middlewares/authentication")
+const {authorizationRoles} = require("../middlewares/authRole")
+
+router.get("/transaction",verifyToken,authorizationRoles("admin","user"),getAllTransactions);
+router.get("/transaction/:id",verifyToken,authorizationRoles("admin","user"), getTransactionById);
+router.get("/transaction/all/:wallet_id",verifyToken,authorizationRoles("admin","user"), getAllTransactionsByDate);
+router.get("/transaction/summary/:wallet_id",getSummary)
 // examples
 
 // Semua transaksi tahun 2024:
@@ -32,16 +36,20 @@ router.get("/transaction/:wallet_id", getAllTransactionsByDate);
 
 router.post(
   "/transaction",
+  verifyToken,
+  authorizationRoles("admin","user"),
   transaction,
   validate(addTransactionSchema),
   addTransaction
 );
 router.put(
   "/transaction/:id",
+  verifyToken,
+  authorizationRoles("admin","user"),
   transaction,
   validate(updateTransactionSchema),
   updateTransaction
 );
-router.delete("/transaction/:id", transaction, deleteTransaction);
+router.delete("/transaction/:id",verifyToken,authorizationRoles("admin","user"), transaction, deleteTransaction);
 
 module.exports = router;

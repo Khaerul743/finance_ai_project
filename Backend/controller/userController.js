@@ -44,4 +44,24 @@ const getUserById = async (req, res) => {
   }
 };
 
-module.exports = { getAllUsers, getUserById };
+const getUserProfile = async (req, res) => {
+  try {
+    const { id } = req.user;
+    console.log(req.user)
+    //Cek apakah user ada
+    const user = await User.findByPk(id);
+    if (!user) return response(res, 404, false, "User tidak ditemukan");
+
+    const { name, email, role } = user;
+    return response(res, 200, true, "Berhasil mengambil data user", {
+      name,
+      email,
+      role,
+    });
+  } catch (error) {
+    console.log("Gagal mengambil data user: ", error);
+    return response(res, 500, false, error.message);
+  }
+};
+
+module.exports = { getAllUsers, getUserById,getUserProfile };

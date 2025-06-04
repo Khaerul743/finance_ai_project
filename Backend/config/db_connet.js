@@ -10,14 +10,25 @@ const sequelize = new Sequelize(
   }
 );
 
-const testConnection = () => {
-  try {
-    sequelize.authenticate();
-    console.log("connection has been established successfully.");
-  } catch (error) {
-    console.error("unable to connect database " + error);
+async function testConnection(retries = 10) {
+  while (retries) {
+    try {
+      await sequelize.authenticate();
+      await sequelize.sync({ alter: true })
+      console.log('Connected to MySQL via Sequelize!');
+      break;
+    } catch (err) {
+      console.error('MySQL not ready, retrying...', err);
+      retries--;
+      await new Promise(res => setTimeout(res, 3000));
+    }
   }
-};
+
+  if (!retries) {
+    console.log('Out of retries. Exiting.');
+    process.exit(1);
+  }
+}
 
 testConnection();
 

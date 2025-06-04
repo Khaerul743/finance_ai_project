@@ -37,7 +37,7 @@ def historyHandler(data,request,jsonify):
     
     email_collection.insert_many(dataPredict)
 
-    url = f"{os.getenv("BACKEND_URL")}/api/transaction"  # ganti sesuai endpoint Express
+    url = f"{os.getenv("BACKEND_URL")}/api/agent/transaction"  # ganti sesuai endpoint Express
     for item in result:
         payload = {
             "wallet_id": item["wallet_id"],
@@ -47,7 +47,8 @@ def historyHandler(data,request,jsonify):
         }
 
         try:
-            response = requests.post(url, json=payload)
+            key=os.getenv("AGENT_SECRET")
+            response = requests.post(url, json=payload,headers={"key":key})
             if response.status_code == 201:
                 print("✅ Data terkirim:", payload)
             else:

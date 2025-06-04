@@ -1,6 +1,7 @@
 const { google } = require("googleapis");
 const cheerio = require("cheerio");
 const { HistoryEmail } = require("../models/relations");
+require("dotenv").config()
 
 async function getEmails(accessToken, user_id) {
   const auth = new google.auth.OAuth2();
@@ -142,4 +143,25 @@ function cleanEmailBody(text) {
   return text;
 }
 
-module.exports = { getEmails, decodeEmailContent, extrak, cleanEmailBody };
+
+const getNewAccessToken = async (refreshToken) => {
+  const oAuth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+  );
+
+  oAuth2Client.setCredentials({ refresh_token: refreshToken });
+
+  try {
+    const { credentials } = await oAuth2Client.refreshAccessToken(); // ✅ deprecated tapi masih aman dipakai
+    return credentials.access_token;
+  } catch (err) {
+    console.error("Error refreshing access token:", err);
+    throw err;
+  }
+};
+
+
+
+module.exports = { getEmails, decodeEmailContent, extrak, cleanEmailBody,getNewAccessToken };

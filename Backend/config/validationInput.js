@@ -26,13 +26,13 @@ const loginSchema = Joi.object({
 
 const addWalletSchema = Joi.object({
   name: Joi.string().min(3).max(50).required(),
-  type: Joi.string().valid("cash", "bank", "ewallet").required(),
+  type: Joi.string().valid("Cash", "Bank", "E-wallet").required(),
   balance: Joi.number().min(0).required(),
 });
 
 const updateWalletSchema = Joi.object({
   name: Joi.string().min(3).max(50).optional(),
-  type: Joi.string().valid("cash", "bank", "ewallet").optional(),
+  type: Joi.string().valid("Cash", "Bank", "E-Wallet").optional(),
   balance: Joi.number().min(0).optional(),
 });
 
@@ -41,18 +41,25 @@ const addTransactionSchema = Joi.object({
   type: Joi.string().valid("pengeluaran", "pemasukan").required(),
   amount: Joi.number().min(0).required(),
   category: Joi.string().valid(
-    "belanja",
-    "keperluan pribadi",
-    "hiburan",
-    "donasi",
-    "investasi",
-    "makanan dan minuman",
-    "kesehatan",
-    "pendidikan",
-    "tagihan",
-    "transportasi",
-    "transfer",
-    "lainnya"
+    'belanja',
+    'keperluan pribadi',
+    'hiburan',
+    'donasi',
+    'investasi',
+    'makanan dan minuman',
+    'kesehatan',
+    'pendidikan',
+    'tagihan',
+    'transportasi',
+    'transfer',
+    'gaji',
+    'bonus',
+    'penjualan',
+    'hadiah',
+    'refund',
+    'hibah',
+    'dividen',
+    'lainnya'
   ),
   description: Joi.string(),
   date: Joi.string(),
@@ -60,21 +67,29 @@ const addTransactionSchema = Joi.object({
 });
 
 const updateTransactionSchema = Joi.object({
+  wallet_id:Joi.number(),
   type: Joi.string().valid("pengeluaran", "pemasukan").required(),
   amount: Joi.number().min(0).required(),
   category: Joi.string().valid(
-    "belanja",
-    "keperluan pribadi",
-    "hiburan",
-    "donasi",
-    "investasi",
-    "makanan dan minuman",
-    "kesehatan",
-    "pendidikan",
-    "tagihan",
-    "transportasi",
-    "transfer",
-    "lainnya"
+    'belanja',
+    'keperluan pribadi',
+    'hiburan',
+    'donasi',
+    'investasi',
+    'makanan dan minuman',
+    'kesehatan',
+    'pendidikan',
+    'tagihan',
+    'transportasi',
+    'transfer',
+    'gaji',
+    'bonus',
+    'penjualan',
+    'hadiah',
+    'refund',
+    'hibah',
+    'dividen',
+    'lainnya'
   ),
   description: Joi.string(),
   date: Joi.string(),

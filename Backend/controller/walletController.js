@@ -2,6 +2,7 @@ const { response } = require("../utils/response");
 const { Wallet, User, Transaction } = require("../models/relations");
 const { addWalletSchema } = require("../config/validationInput");
 const paginate = require("../utils/paginate");
+const redisClient = require("../config/redis_connect")
 
 const getAllWallet = async (req, res) => {
   try {
@@ -28,7 +29,7 @@ const getAllWallet = async (req, res) => {
   }
 };
 
-const getAllWalletById = async (req, res) => {
+const getWalletById = async (req, res) => {
   try {
     const { id } = req.params;
     const getData = await Wallet.findByPk(id);
@@ -70,6 +71,17 @@ const addWallet = async (req, res) => {
   }
 };
 
+const getMyWallet = async (req,res) => {
+  const {id} = req.user
+  try {
+    const getWallet = await Wallet.findAll({where:{user_id:id}})
+    return response(res,200,true,"Berhasil mengambil data wallet",getWallet)
+  } catch (error) {
+    console.log("Gagal mengambil wallet: ", error);
+    return response(res, 500, false, error.message);
+  }
+}
+
 const updateWallet = async (req, res) => {
   try {
     const { id } = req.params;
@@ -96,7 +108,6 @@ const updateWallet = async (req, res) => {
 const deleteWallet = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, type, balance } = req.body;
     //Cek wallet apakah ada
     const wallet = await Wallet.findByPk(id);
     if (!wallet) return response(res, 404, false, "Wallet tidak ditemukan");
@@ -193,7 +204,9 @@ const getTransactionByWalletId = async (req, res) => {
     if (!transactions || transactions.length === 0) {
       return response(res, 404, false, "Belum melakukan transaksi");
     }
+    const key = req.originalUrl
 
+    await redisClient.set(key,JSON.stringify(transactions),{EX:"60"})
     return response(
       res,
       200,
@@ -209,7 +222,8 @@ const getTransactionByWalletId = async (req, res) => {
 
 module.exports = {
   getAllWallet,
-  getAllWalletById,
+  getWalletById,
+  getMyWallet,
   addWallet,
   updateWallet,
   deleteWallet,

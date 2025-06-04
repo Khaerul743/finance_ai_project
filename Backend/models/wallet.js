@@ -24,8 +24,8 @@ const Wallet = sequelize.define(
       allowNull: false,
     },
     type: {
-      type: DataTypes.ENUM("pokok", "goal"),
-      defaultValue: "pokok",
+      type: DataTypes.ENUM("Bank", "E-wallet","Cash"),
+      defaultValue: "Bank",
       allowNull: false,
     },
     balance: {

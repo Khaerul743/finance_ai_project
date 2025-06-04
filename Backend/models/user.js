@@ -14,13 +14,13 @@ const User = sequelize.define(
       allowNull: false,
     },
     email: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
     password: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: true,
     },
     created_at: {
       type: DataTypes.DATE,
@@ -31,6 +31,9 @@ const User = sequelize.define(
       type: DataTypes.ENUM("admin", "user"),
       defaultValue: "user",
     },
+    provider:{type:DataTypes.STRING,allowNull:true},
+    g_refreshToken:{type:DataTypes.TEXT,allowNull:true},
+    g_accessToken:{type:DataTypes.TEXT,allowNull:true}
   },
   {
     tableName: "users",
