@@ -13,7 +13,7 @@ const Button = ({ onClick, children, icon: Icon, variant = 'primary', className 
             onClick={onClick}
             className={`${baseStyle} ${variants[variant]} ${className}`}
         >
-            {Icon && <Icon className="h-5 w-5 mr-2" />}
+            {Icon && <Icon className="h-4 w-4 mr-2" />}
             {children}
         </button>
     );

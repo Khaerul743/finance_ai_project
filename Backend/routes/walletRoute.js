@@ -28,6 +28,6 @@ router.post("/wallet", verifyToken,authorizationRoles("admin","user"), validate(
 router.put("/wallet/:id",verifyToken, validate(updateWalletSchema),authorizationRoles("admin","user"), updateWallet);
 router.delete("/wallet/:id",verifyToken,authorizationRoles("admin","user"), deleteWallet);
 router.get("/wallet/:id/balance",verifyToken,authorizationRoles("admin","user"), getBalanceById);
-router.get("/wallet/:id/transactions",verifyToken,authorizationRoles("admin","user"),redisCache, getTransactionByWalletId);
+router.get("/wallet/:id/transactions",verifyToken,authorizationRoles("admin","user"), getTransactionByWalletId);
 
 module.exports = router;

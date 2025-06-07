@@ -225,15 +225,15 @@ const Transaction = () => {
                     {/* Header */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
                         <h1 className="text-2xl sm:text-3xl font-bold text-white">Transactions</h1>
-                        <div className="flex gap-2">
-                            <Button onClick={handleAddTransaction} icon={PlusIcon}>
+                        <div className="flex flex-col items-center sm:flex-row sm:w-auto gap-2">
+                            <Button onClick={handleAddTransaction} icon={PlusIcon} className="w-full max-w-xs mx-auto sm:w-auto flex items-center justify-center">
                                 Add Transaction
                             </Button>
                             <Button 
                                 onClick={handleFetchEmails} 
                                 icon={PlusIcon}
                                 disabled={isFetchingEmails}
-                                className={`flex items-center gap-2 ${isFetchingEmails ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`w-full max-w-xs mx-auto sm:w-auto flex items-center justify-center gap-2 ${isFetchingEmails ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 {isFetchingEmails ? (
                                     <>
