@@ -36,7 +36,11 @@ def postChat():
         }
         # Masukan ke dalam database
         chat_collection.insert_one(payload)
-        return jsonify(payload)
+        return jsonify({
+            "wallet_id": data["wallet_id"],
+            "user_message": data["message"],
+            "response": response_llm
+        })
     except Exception as e:
         print(str(e))
         return jsonify({"error": str(e)}), 500
